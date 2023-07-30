@@ -6,9 +6,9 @@ class nn():
     def __init__(self, input, no_output):
         """Initialising the weights for the neural networks"""
         self._no_output = no_output
-        self._weights = False
+        self._weights_set = False
 
     def forward(self, input):
-        if not self._weights:
+        if not self._weights_set:
             self._weights = np.random.randn((input.shape[1], no_output))
         return self._input @ self._weight
