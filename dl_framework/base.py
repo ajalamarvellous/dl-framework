@@ -1,9 +1,14 @@
 """Base functions and classes will be found here"""
 import numpy as np
 
+class nn():
+    """A neural network implementation in numpy"""
+    def __init__(self, input, no_output):
+        """Initialising the weights for the neural networks"""
+        self._no_output = no_output
+        self._weights = False
 
-def neural_network(input, weight):
-    input = np.array(input)
-    weight = np.array(input)
-    prediction = input @ weight
-    return prediction
+    def forward(self, input):
+        if not self._weights:
+            self._weights = np.random.randn((input.shape[1], no_output))
+        return self._input @ self._weight
