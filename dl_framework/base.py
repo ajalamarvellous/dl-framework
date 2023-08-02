@@ -5,7 +5,7 @@ import numpy as np
 class nn:
     """A neural network implementation in numpy"""
 
-    def __init__(self, input, no_output):
+    def __init__(self, no_output: int):
         """Initialising the weights for the neural networks"""
         self._no_output = no_output
         self._weights_set = False
