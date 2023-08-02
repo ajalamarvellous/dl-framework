@@ -4,9 +4,9 @@
 
 
 import unittest
+
 from click.testing import CliRunner
 
-from dl_framework import dl_framework
 from dl_framework import cli
 
 
@@ -27,7 +27,7 @@ class TestDl_framework(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(cli.main)
         assert result.exit_code == 0
-        assert 'dl_framework.cli.main' in result.output
-        help_result = runner.invoke(cli.main, ['--help'])
+        assert "dl_framework.cli.main" in result.output
+        help_result = runner.invoke(cli.main, ["--help"])
         assert help_result.exit_code == 0
-        assert '--help  Show this message and exit.' in help_result.output
+        assert "--help  Show this message and exit." in help_result.output

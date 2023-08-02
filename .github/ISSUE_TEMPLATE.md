@@ -1,6 +1,6 @@
-* dl-framework version:
-* Python version:
-* Operating System:
+-   dl-framework version:
+-   Python version:
+-   Operating System:
 
 ### Description
 
