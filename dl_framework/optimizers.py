@@ -28,6 +28,6 @@ class GradientDescent:
         model = model()
         for n in range(self._iterations):
             y_pred = model.forward(x_train)
-            error = self._loss_fn(y_train - y_pred)
+            error = self._loss_fn(y_train, y_pred)
             model._weights -= error * x_train * self._alpha
         return model
