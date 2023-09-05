@@ -2,16 +2,17 @@
 import numpy as np
 
 
-class nn:
+class NN:
     """A neural network implementation in numpy"""
 
-    def __init__(self, no_output: int):
-        """Initialising the weights for the neural networks"""
-        self._no_output = no_output
-        self._weights_set = False
+    def __init__(self, input_size: int, output_size: int):
+        """
+        Initialising the weights for the neural networks
+        input_size: size of input
+        output_size: size of output
+        """
+        self._weights = np.random.rand(input_size, output_size)
+        self.bias = np.random.rand()
 
-    def forward(self, input):
-        if not self._weights_set:
-            self._weights = np.random.randn((input.shape[1], self._no_output))
-            self.bias = np.random.randn()
-        return self._input @ self._weight + self.bias
+    def __call__(self, input):
+        return input @ self._weights + self.bias
