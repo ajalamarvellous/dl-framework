@@ -13,4 +13,5 @@ class nn:
     def forward(self, input):
         if not self._weights_set:
             self._weights = np.random.randn((input.shape[1], self._no_output))
-        return self._input @ self._weight
+            self.bias = np.random.randn()
+        return self._input @ self._weight + self.bias
