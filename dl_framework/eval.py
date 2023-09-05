@@ -11,10 +11,16 @@ class RMSE:
         pass
 
     def __call__(self, y_true: List[float], y_pred: List[float]) -> List:
-        if len(y_true) != len(y_pred):
-            raise Exception(
-                f"The len of y_true {len(y_true)} does not match the len of y_pred{len(y_pred)}"  # noqa
-            )
+        if type(y_true) == list:
+            assert (
+                y_pred == list
+            ), "Only one prediction returned and list of true values given"  # noqa
+            assert len(y_true) != len(
+                y_pred
+            ), f"The len of y_true {len(y_true)} does not match the len of y_pred{len(y_pred)}"  # noqa
+            n = len(y_true)
+        else:
+            n = 1
         self.mse_ = (np.array(y_true) - np.array(y_pred)) ** 2
-        self.rmse_ = np.average(np.sqrt(self.mse_))
-        return np.average(self.mse_)
+        self.rmse_ = np.sqrt(np.sum(self.mse_)) / n
+        return self.rmse_
