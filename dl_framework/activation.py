@@ -1,7 +1,7 @@
 """Activation functions available in dl-framework"""
 
 
-class relu:
+class Relu:
     def __init__(self):
         pass
 
