@@ -39,3 +39,8 @@ class Sequential:
             self.layers.extend(node)
         else:
             self.layers.append(node)
+
+    def forward(self, input):
+        for layer in self.layers:
+            input = layer(input)
+        return input
