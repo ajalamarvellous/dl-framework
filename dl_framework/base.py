@@ -1,5 +1,14 @@
 """Base functions and classes will be found here"""
+import logging
+
 import numpy as np
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename="../.file.log",
+    format="%(asctime)s %(funcName)s[%(levelname)s]: %(message)s ",
+)
+logger = logging.getLogger()
 
 
 class NN:
@@ -16,12 +25,20 @@ class NN:
 
     def __call__(self, input):
         self.input = input
+        logger.debug(
+            f"NN input shape: {self.input.shape}, weights: {self._weights.shape}"  # noqa
+        )
         self.output = self.input @ self._weights + self.bias
+        logger.debug(f"Output shape {self.output.shape}")
         return self.output
 
     def backprop(self, delta, lr):
-        self.weights -= self.input.T @ delta * lr
-        return delta @ self.weights.T
+        delta = delta.reshape(delta.shape[0], -1)
+        logger.debug(
+            f"Shapes input.T: {self.input.T.shape}, delta: {delta.shape}"
+        )  # noqa
+        self._weights -= self.input.T @ delta * lr
+        return delta @ self._weights.T
 
 
 class Sequential:
@@ -45,6 +62,7 @@ class Sequential:
             self.layers.append(node)
 
     def forward(self, input):
+        # input = input
         for layer in self.layers:
             input = layer(input)
         return input
@@ -60,3 +78,4 @@ class Sequential:
         self.layers.reverse()
         for layer in self.layers:
             delta = layer.backprop(delta, lr)
+        self.layers.reverse()
