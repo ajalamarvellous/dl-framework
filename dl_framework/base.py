@@ -40,7 +40,7 @@ class NN:
             f"Shapes input.T: {self.input.T.shape}, delta: {delta.shape}"
         )  # noqa
         # update weights here
-        self._weights -= self.input.T @ delta * lr
+        self._weights += self.input.T @ delta * lr
         # propagate error(delta) backwards
         return delta @ self._weights.T
 
