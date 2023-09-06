@@ -10,5 +10,7 @@ class Relu:
         self.output = (x > 0) * x
         return self.output
 
-    def backprop(self, delta):
-        return (self.output > 0) * delta
+    def backprop(self, delta, lr):
+        """lr was added for consistency of interface, it has no use here"""
+        lr = 1
+        return (self.output > 0) * delta * lr
