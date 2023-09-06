@@ -18,3 +18,18 @@ class NN:
         self.input = input
         self.output = self.input @ self._weights + self.bias
         return self.output
+
+
+class Sequential:
+    """
+    A sortof graph tracker to arrange the order for feedforward or Backprop
+    """
+
+    def __init__(self):
+        self.layers = []
+
+    def __call__(self, node):
+        self.layers.append(node)
+
+    def add(self, node):
+        self.layers.append(node)
