@@ -20,8 +20,8 @@ class NN:
         input_size: size of input
         output_size: size of output
         """
-        self._weights = np.random.rand(input_size, output_size)
-        self.bias = np.random.rand()
+        self._weights = np.random.normal(0, 0.1, (input_size, output_size))
+        self.bias = np.random.normal(0, 0.1, 1)
 
     def __call__(self, input):
         self.input = input
