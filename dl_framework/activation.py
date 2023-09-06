@@ -7,4 +7,8 @@ class Relu:
 
     def __call__(self, x):
         """Retrun same value if greater than zero"""
-        return (x > 0) * x
+        self.output = (x > 0) * x
+        return self.output
+
+    def backprop(self, delta):
+        return (self.output > 0) * delta
