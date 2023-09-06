@@ -1,3 +1,5 @@
 .venv
 .pre-commit-config.yaml
 *.csv
+*.log
+/dl_framework/__pycache__/*
