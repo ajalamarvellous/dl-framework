@@ -40,27 +40,23 @@ def main(x_data, y_data):
     model([NN(5, 10), Relu(), NN(10, 1)])
 
     rmse = RMSE()
-    alpha = 0.001
+    alpha = 0.0001
     print("Models parameters successfully set...")
 
     n = 0
     x_train, y_train = np.array(x_train), np.array(y_train)
     print(x_train.shape, y_train.shape)
 
-    for _ in range(10):
+    for _ in range(700):
         y_pred, y_true = [], []
         for i, (X_train, Y_train) in enumerate(zip(x_train, y_train)):
             if len(X_train.shape) == 1:
                 X_train = np.array([X_train])
-            print(X_train.shape)
             output = model.forward(X_train)
             n += 1
             y_pred.append(output), y_true.append(Y_train)
-            print(f"Forward prop {n} done....")
             error = np.array(Y_train) - output
-            print(f"Calculating error, Error: {error}....")
             model.backprop(error, alpha)
-            print(f"Backprop done successfully... \n {'-' * 50} \n")
 
         error = rmse(Y_train, y_pred)
         print(f"The RMSE of the model is {error}....done.")
