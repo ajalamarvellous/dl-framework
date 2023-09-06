@@ -1,6 +1,22 @@
 """implementation of different optimizations"""
-
+import numpy as np
 from eval import RMSE
+
+
+class Dropout:
+    def __init__(self, percentage):
+        """Randomly set certain percentage to zero"""
+        self.p = percentage
+        pass
+
+    def __call__(self, inputs):
+        self.mask = np.random.choice(
+            2, size=inputs.shape, p=[self.p, 1 - self.p]
+        )  # noqa
+        return inputs * self.mask
+
+    def backprop(self, delta, lr):
+        return delta * self.mask
 
 
 class GradientDescent:
