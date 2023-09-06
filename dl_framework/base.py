@@ -29,7 +29,13 @@ class Sequential:
         self.layers = []
 
     def __call__(self, node):
-        self.layers.append(node)
+        if isinstance(node, list):
+            self.layers.extend(node)
+        else:
+            self.layers.append(node)
 
     def add(self, node):
-        self.layers.append(node)
+        if isinstance(node, list):
+            self.layers.extend(node)
+        else:
+            self.layers.append(node)
