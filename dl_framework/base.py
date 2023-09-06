@@ -15,4 +15,6 @@ class NN:
         self.bias = np.random.rand()
 
     def __call__(self, input):
-        return input @ self._weights + self.bias
+        self.input = input
+        self.output = self.input @ self._weights + self.bias
+        return self.output
