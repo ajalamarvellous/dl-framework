@@ -57,7 +57,7 @@ def main(x_data, y_data):
         for i, (X_train, Y_train) in enumerate(zip(x_train_, y_train_)):
             if len(X_train.shape) == 1:
                 X_train = np.array([X_train])
-            output = model.forward(X_train)
+            output = model.predict(X_train)
             n += 1
             y_pred.append(output), y_true.append(Y_train)
             error = np.array(Y_train) - output

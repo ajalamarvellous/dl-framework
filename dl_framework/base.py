@@ -69,7 +69,7 @@ class Sequential:
         else:
             self.layers.append(node)
 
-    def forward(self, input):
+    def predict(self, input):
         """Forward propagation through the network"""
         for layer in self.layers:
             input = layer(input)
