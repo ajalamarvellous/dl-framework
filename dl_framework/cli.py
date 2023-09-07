@@ -7,6 +7,24 @@ from eval import RMSE
 from optimizers import Dropout
 
 
+def prepare_data(x_data, y_data):
+    x_file = open(x_data)
+    x = x_file.readlines()
+    x_train = [
+        [float(b.strip()) for b in a.split(",")]
+        for a in x[: round(len(x) * 0.7)]  # noqa
+    ]
+    print("Training file processesses successfully...")
+    y_file = open(y_data)
+    y = y_file.read()
+    y_train = [
+        float(a.strip()) for a in y.split(",")[: round(len(y.split(",")) * 0.7)]  # noqa
+    ]  # noqa
+    print("Training labels processed successfully...")
+    x_file.close(), y_file.close()
+    return x_train, y_train
+
+
 @click.command()
 @click.option("--x_data", help="training data file")
 @click.option("--y_data", help="traing data label")
@@ -22,21 +40,10 @@ def main(x_data, y_data):
     )
     click.echo("See click documentation at https://click.palletsprojects.com/")
 
+    x_train, y_train = prepare_data(x_data, y_data)
+    x_train, y_train = np.array(x_train), np.array(y_train)
+
     np.random.seed(2022)
-    x_file = open(x_data)
-    x = x_file.readlines()
-    x_train = [
-        [float(b.strip()) for b in a.split(",")]
-        for a in x[: round(len(x) * 0.7)]  # noqa
-    ]
-    print("Training file processesses successfully...")
-    y_file = open(y_data)
-    y = y_file.read()
-    y_train = [
-        float(a.strip()) for a in y.split(",")[: round(len(y.split(",")) * 0.7)]  # noqa
-    ]  # noqa
-    print("Training labels processed successfully...")
-    x_file.close(), y_file.close()
 
     model = Sequential()
     model([NN(5, 10), Relu(), Dropout(0.3), NN(10, 1)])
@@ -47,7 +54,6 @@ def main(x_data, y_data):
     batch_size = 32
     print("Models parameters successfully set...")
 
-    x_train, y_train = np.array(x_train), np.array(y_train)
     print(x_train.shape, y_train.shape)
 
     model.train(x_train, y_train, lr, epoch, batch_size, rmse)
