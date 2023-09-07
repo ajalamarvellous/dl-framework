@@ -2,7 +2,7 @@
 import click
 import numpy as np
 from activation import Relu
-from base import NN, Sequential
+from base import Linear, Sequential
 from eval import RMSE
 from optimizers import Dropout
 
@@ -45,7 +45,7 @@ def main(x_data, y_data):
 
     np.random.seed(2022)
 
-    model = Sequential([NN(5, 10), Relu(), Dropout(0.3), NN(10, 1)])
+    model = Sequential([Linear(5, 10), Relu(), Dropout(0.3), Linear(10, 1)])
     # Models can be initiated using  any of the following too
     # This
     # model = Sequential()

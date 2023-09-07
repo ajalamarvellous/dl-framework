@@ -11,7 +11,7 @@ logging.basicConfig(
 logger = logging.getLogger()
 
 
-class NN:
+class Linear:
     """A neural network implementation in numpy"""
 
     def __init__(self, input_size: int, output_size: int):
