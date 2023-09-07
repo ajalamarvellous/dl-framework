@@ -45,8 +45,14 @@ def main(x_data, y_data):
 
     np.random.seed(2022)
 
-    model = Sequential()
-    model([NN(5, 10), Relu(), Dropout(0.3), NN(10, 1)])
+    model = Sequential([NN(5, 10), Relu(), Dropout(0.3), NN(10, 1)])
+    # Models can be initiated using  any of the following too
+    # This
+    # model = Sequential()
+    # model([NN(5, 10), Relu(), Dropout(0.3), NN(10, 1)])
+    # Or This
+    # model = Sequential()
+    # model.add([NN(5, 10), Relu(), Dropout(0.3), NN(10, 1)])
 
     rmse = RMSE()
     lr = 0.0001
