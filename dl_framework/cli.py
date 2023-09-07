@@ -4,6 +4,7 @@ import numpy as np
 from activation import Relu
 from base import NN, Sequential
 from eval import RMSE
+from optimizers import Dropout
 
 
 @click.command()
@@ -21,6 +22,7 @@ def main(x_data, y_data):
     )
     click.echo("See click documentation at https://click.palletsprojects.com/")
 
+    np.random.seed(2022)
     x_file = open(x_data)
     x = x_file.readlines()
     x_train = [
@@ -37,19 +39,22 @@ def main(x_data, y_data):
     x_file.close(), y_file.close()
 
     model = Sequential()
-    model([NN(5, 10), Relu(), NN(10, 1)])
+    model([NN(5, 10), Relu(), Dropout(0.3), NN(10, 1)])
 
     rmse = RMSE()
     alpha = 0.0001
+    batch_size = 32
     print("Models parameters successfully set...")
 
     n = 0
     x_train, y_train = np.array(x_train), np.array(y_train)
     print(x_train.shape, y_train.shape)
 
-    for _ in range(700):
+    for _ in range(20):
         y_pred, y_true = [], []
-        for i, (X_train, Y_train) in enumerate(zip(x_train, y_train)):
+        choices = np.random.choice(x_train.shape[0], size=batch_size)
+        x_train_, y_train_ = x_train[choices, :], y_train[choices]
+        for i, (X_train, Y_train) in enumerate(zip(x_train_, y_train_)):
             if len(X_train.shape) == 1:
                 X_train = np.array([X_train])
             output = model.forward(X_train)
