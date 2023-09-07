@@ -52,8 +52,11 @@ class Sequential:
     stack in the queue (using python list)
     """
 
-    def __init__(self):
-        self.layers = []
+    def __init__(self, layers=None):
+        if layers is None:
+            self.layers = []
+        else:
+            self.layers = layers
 
     def __call__(self, node):
         """Add a layer (of n nodes) to the graph"""
