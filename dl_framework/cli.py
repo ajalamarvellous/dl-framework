@@ -4,25 +4,32 @@ import numpy as np
 from activation import Relu
 from base import Linear, Sequential
 from eval import RMSE
-from optimizers import Dropout
+from optimizers import Dropout, EarlyStoppage
 
 
-def prepare_data(x_data, y_data):
+def prepare_data(x_data, y_data, train_size):
     x_file = open(x_data)
     x = x_file.readlines()
-    x_train = [
-        [float(b.strip()) for b in a.split(",")]
-        for a in x[: round(len(x) * 0.7)]  # noqa
-    ]
+    x_train = [[float(b.strip()) for b in a.split(",")] for a in x]
     print("Training file processesses successfully...")
+
     y_file = open(y_data)
     y = y_file.read()
-    y_train = [
-        float(a.strip()) for a in y.split(",")[: round(len(y.split(",")) * 0.7)]  # noqa
-    ]  # noqa
+    y_train = [float(a.strip()) for a in y.split(",")]  # noqa
     print("Training labels processed successfully...")
+
     x_file.close(), y_file.close()
-    return x_train, y_train
+
+    idx = np.random.permutation(np.arange(len(x) - 1))
+    train_idx = idx[: round(len(idx) * train_size)]
+    test_idx = idx[round(len(idx) * train_size) :]  # noqa
+    print(train_idx, test_idx)
+    return (
+        np.array(x_train)[train_idx],
+        np.array(y_train)[train_idx],
+        np.array(x_train)[test_idx],
+        np.array(y_train)[test_idx],
+    )
 
 
 @click.command()
@@ -40,11 +47,11 @@ def main(x_data, y_data):
     )
     click.echo("See click documentation at https://click.palletsprojects.com/")
 
-    x_train, y_train = prepare_data(x_data, y_data)
-    x_train, y_train = np.array(x_train), np.array(y_train)
+    x_train, y_train, x_test, y_test = prepare_data(x_data, y_data, 0.75)
+    print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
 
-    np.random.seed(2022)
-
+    np.random.seed(1)
+    # , Dropout(0.3)
     model = Sequential([Linear(5, 10), Relu(), Dropout(0.3), Linear(10, 1)])
     # Models can be initiated using  any of the following too
     # This
@@ -56,13 +63,24 @@ def main(x_data, y_data):
 
     rmse = RMSE()
     lr = 0.0001
-    epoch = 100
-    batch_size = 32
+    epoch = 3000
+    batch_size = 1
+    early_stoppage = EarlyStoppage(patience=30)
     print("Models parameters successfully set...")
 
     print(x_train.shape, y_train.shape)
 
-    model.train(x_train, y_train, lr, epoch, batch_size, rmse)
+    model.train(
+        x_train,
+        y_train,
+        x_test,
+        y_test,
+        lr,
+        epoch,
+        batch_size,
+        rmse,
+        early_stoppage,  # noqa
+    )  # noqa
     return
 
 
