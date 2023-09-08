@@ -92,7 +92,16 @@ class Sequential:
             delta = layer.backprop(delta, lr)
         self.layers.reverse()
 
-    def train(self, x_train, y_train, lr, epoch, batch_size, error_func):
+    def train(
+        self,
+        x_train,
+        y_train,
+        lr,
+        epoch,
+        batch_size,
+        error_func,
+        early_stoppage=None,
+    ):
         for _ in range(epoch):
             y_pred, y_true = [], []
             if batch_size == 1:
@@ -109,5 +118,15 @@ class Sequential:
                 error = np.array(Y_train) - output
                 self.backprop(error, lr)
 
+            y_pred = np.array(y_pred).flatten()
+            y_true = np.array(y_true).flatten()
             error = error_func(y_true, y_pred)
+
+            print(f"Epoch {_}/ {epoch}...")
+            if early_stoppage is not None:
+                early_stoppage(self.layers, error)
+                if early_stoppage.early_stoppage is True:  # noqa
+                    break
             print(f"The RMSE of the model is {error}....done.")
+
+            self.layers = early_stoppage.model
