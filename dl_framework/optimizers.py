@@ -1,4 +1,6 @@
 """implementation of different optimizations"""
+import copy
+
 import numpy as np
 from eval import RMSE
 
@@ -17,6 +19,32 @@ class Dropout:
 
     def backprop(self, delta, lr):
         return delta * self.mask
+
+
+class EarlyStoppage:
+    def __init__(self, patience=10):
+        self.patience = patience
+        self.best_score = None
+        self.count = 0
+        self.early_stoppage = False
+
+    def __call__(self, model, error):
+        self.count += 1
+        if self.best_score is None:
+            self.best_score = error
+            self.model = copy.deepcopy(model)
+        elif self.count >= self.patience:
+            print("Stopping training now....")
+            self.early_stoppage = True
+        elif error < self.best_score:
+            self.best_score = error
+            self.model = copy.deepcopy(model)
+            self.count = 0
+        elif error >= self.best_score:
+            print(f"Error not improving {self.count}/{self.patience}")
+            print(f"Error: {error}, best error: {self.best_score}")
+        else:
+            pass
 
 
 class GradientDescent:
