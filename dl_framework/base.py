@@ -94,18 +94,20 @@ class Sequential:
 
     def train(self, x_train, y_train, lr, epoch, batch_size, error_func):
         for _ in range(epoch):
-            n = 0
             y_pred, y_true = [], []
-            choices = np.random.choice(x_train.shape[0], size=batch_size)
-            x_train_, y_train_ = x_train[choices, :], y_train[choices]
-            for i, (X_train, Y_train) in enumerate(zip(x_train_, y_train_)):
+            if batch_size == 1:
+                x_train_, y_train_ = x_train, y_train
+            else:
+                choices = np.random.choice(x_train.shape[0], size=batch_size)
+                x_train_, y_train_ = x_train[choices, :], y_train[choices]
+
+            for X_train, Y_train in zip(x_train_, y_train_):
                 if len(X_train.shape) == 1:
                     X_train = np.array([X_train])
                 output = self.predict(X_train)
-                n += 1
                 y_pred.append(output), y_true.append(Y_train)
                 error = np.array(Y_train) - output
                 self.backprop(error, lr)
 
-            error = error_func(Y_train, y_pred)
+            error = error_func(y_true, y_pred)
             print(f"The RMSE of the model is {error}....done.")
