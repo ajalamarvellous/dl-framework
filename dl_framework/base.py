@@ -96,6 +96,8 @@ class Sequential:
         self,
         x_train,
         y_train,
+        x_test,
+        y_test,
         lr,
         epoch,
         batch_size,
@@ -106,9 +108,11 @@ class Sequential:
             y_pred, y_true = [], []
             if batch_size == 1:
                 x_train_, y_train_ = x_train, y_train
+                x_test_, y_test_ = x_test, y_test
             else:
                 choices = np.random.choice(x_train.shape[0], size=batch_size)
                 x_train_, y_train_ = x_train[choices, :], y_train[choices]
+                x_test_, y_test_ = x_test[choices, :], y_test[choices, :]
 
             for X_train, Y_train in zip(x_train_, y_train_):
                 if len(X_train.shape) == 1:
@@ -120,13 +124,18 @@ class Sequential:
 
             y_pred = np.array(y_pred).flatten()
             y_true = np.array(y_true).flatten()
-            error = error_func(y_true, y_pred)
+            train_error = error_func(y_true, y_pred)
 
-            print(f"Epoch {_}/ {epoch}...")
+            y_pred_test = self.predict(x_test_).flatten()
+            test_error = error_func(np.array(y_test_), y_pred_test)
+
+            print(f"Epoch {_}/ {epoch} done...")
             if early_stoppage is not None:
                 early_stoppage(self.layers, error)
                 if early_stoppage.early_stoppage is True:  # noqa
                     break
-            print(f"The RMSE of the model is {error}....done.")
+            print(
+                f"The train error: {train_error}, test error: {test_error}...."
+            )  # noqa
 
-            self.layers = early_stoppage.model
+        self.layers = early_stoppage.model
