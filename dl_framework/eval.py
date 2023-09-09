@@ -23,3 +23,11 @@ class RMSE:
         self.mse_ = (np.array(y_true) - np.array(y_pred)) ** 2
         self.rmse_ = np.sqrt(np.sum(self.mse_)) / n
         return self.rmse_
+
+
+class LogLikelyhod:
+    def __init__(self):
+        pass
+
+    def __call__(self):
+        pass
