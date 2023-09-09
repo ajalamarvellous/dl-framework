@@ -131,7 +131,7 @@ class Sequential:
 
             print(f"Epoch {_}/ {epoch} done...")
             if early_stoppage is not None:
-                early_stoppage(self.layers, error)
+                early_stoppage(self.layers, test_error)
                 if early_stoppage.early_stoppage is True:  # noqa
                     break
             print(
