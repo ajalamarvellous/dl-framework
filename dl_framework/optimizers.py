@@ -31,18 +31,18 @@ class EarlyStoppage:
     def __call__(self, model, error):
         self.count += 1
         if self.best_score is None:
-            self.best_score = error
+            self.best_score = abs(error)
             self.model = copy.deepcopy(model)
         elif self.count >= self.patience:
             print("Stopping training now....")
             self.early_stoppage = True
-        elif error < self.best_score:
-            self.best_score = error
+        elif abs(error) < self.best_score:
+            self.best_score = abs(error)
             self.model = copy.deepcopy(model)
             self.count = 0
-        elif error >= self.best_score:
+        elif abs(error) >= self.best_score:
             print(f"Error not improving {self.count}/{self.patience}")
-            print(f"Error: {error}, best error: {self.best_score}")
+            print(f"Error: {abs(error)}, best error: {self.best_score}")
         else:
             pass
 
