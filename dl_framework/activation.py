@@ -29,3 +29,16 @@ class Sigmoid:
     def backprop(self, delta, lr):
         lr = 1
         return self.output * (1 - self.output) * delta * lr
+
+
+class Tanh:
+    def __init__(self):
+        pass
+
+    def __call__(self, x):
+        self.output = np.tanh(x)
+        return self.output
+
+    def backprop(self, delta, lr):
+        lr = 1
+        return (1 - self.output**2) * lr
