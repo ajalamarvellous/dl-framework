@@ -25,7 +25,7 @@ class RMSE:
         return self.rmse_
 
 
-class LogLikelyhod:
+class LogLikelihood:
     def __init__(self):
         pass
 
