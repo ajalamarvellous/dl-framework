@@ -1,5 +1,7 @@
 """Activation functions available in dl-framework"""
 
+import numpy as np
+
 
 class Relu:
     def __init__(self):
@@ -14,3 +16,29 @@ class Relu:
         """lr was added for consistency of interface, it has no use here"""
         lr = 1
         return (self.output > 0) * delta * lr
+
+
+class Sigmoid:
+    def __init__(self):
+        pass
+
+    def __call__(self, x):
+        self.output = 1 / (1 + np.exp(-x))
+        return self.output
+
+    def backprop(self, delta, lr):
+        lr = 1
+        return self.output * (1 - self.output) * delta * lr
+
+
+class Tanh:
+    def __init__(self):
+        pass
+
+    def __call__(self, x):
+        self.output = np.tanh(x)
+        return self.output
+
+    def backprop(self, delta, lr):
+        lr = 1
+        return (1 - self.output**2) * lr
