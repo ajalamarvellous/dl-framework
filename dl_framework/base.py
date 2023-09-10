@@ -45,6 +45,32 @@ class Linear:
         return delta @ self._weights.T
 
 
+class ConvLayer:
+    def __init__(
+        self, filter_size, kernel, input_dim, stride=(1, 1), padding=(0, 0)
+    ):  # noqa
+        self.input_dim = input_dim
+        self.filter_size = filter_size
+        self.kernel = kernel
+        self.stride = stride
+        self.padding = padding
+
+    def _get_image_chunks(self, image):
+        dims = image.shape
+        image_chunk = []
+        for x_i in range(dims[0]):
+            for y_i in range(dims[1]):
+                chunk = image[
+                    :, x_i : self.filter_size[0], y_i : self.filter_size[1], :  # noqa
+                ].reshape(
+                    -1, dims[-1], self.filter_size[0], self.filter_size[1]
+                )  # noqa
+                image_chunk.append(chunk)
+        expanded = np.concatenate(image_chunk, axis=0)
+        flattened_input = expanded.reshape(-1, np.sum(self.filter_size))
+        return flattened_input
+
+
 class Sequential:
     """
     A sortof graph tracker to arrange the order for feedforward or Backprop
