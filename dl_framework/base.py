@@ -47,13 +47,13 @@ class Linear:
 
 class ConvLayer:
     def __init__(
-        self, filter_size, kernel, input_dim, stride=(1, 1), padding=(0, 0)
+        self, filter_size, kernel_size, input_dim, stride=(1, 1), padding=(0, 0)  # noqa
     ):  # noqa
         self.input_dim = input_dim
         self.filter_size = filter_size
-        self.kernel = kernel
-        self._kernel_weights = np.random.normal(
-            0, 0.1, (self.filter_size[0] * self.filter_size[1], self.kernel)
+        self.kernel_size = kernel_size
+        self._kernel_weights = Linear(
+            self.filter_size[0] * self.filter_size[1], self.kernel_size
         )
         self.bias = np.random.normal(0, 0.1)
         self.stride = stride
@@ -77,22 +77,11 @@ class ConvLayer:
         return flattened_input
 
     def __call__(self, images):
-        self.input = self._get_image_chunks(images)
-
-        self.output = self.input @ self._kernel_weights + self.bias
-        logger.debug(f"Output shape {self.output.shape}")
-        return self.output
+        return self._kernel(self._get_image_chunks(images))
 
     def backprop(self, delta, lr):
         """Delta is the erro contribution of the nodes at the layer"""
-        delta = delta.reshape(self.input.shape)
-        logger.debug(
-            f"Shapes input.T: {self.input.T.shape}, delta: {delta.shape}"
-        )  # noqa
-        # update weights here
-        self._kernel_weights += self.input.T @ delta * lr
-        # propagate error(delta) backwards
-        return delta @ self._weights.T
+        return self._kernel.backprop(delta, lr)
 
 
 class Sequential:
