@@ -52,14 +52,18 @@ class ConvLayer:
         self.input_dim = input_dim
         self.filter_size = filter_size
         self.kernel = kernel
+        self._kernel_weights = np.random.normal(
+            0, 0.1, (self.filter_size[0] * self.filter_size[1], self.kernel)
+        )
+        self.bias = np.random.normal(0, 0.1)
         self.stride = stride
         self.padding = padding
 
     def _get_image_chunks(self, image):
         dims = image.shape
         image_chunk = []
-        for x_i in range(dims[0]):
-            for y_i in range(dims[1]):
+        for x_i in range(dims[1] - self.filter_size[0], self.stride[0]):
+            for y_i in range(dims[2] - self.filter_size[1], self.stride[1]):
                 chunk = image[
                     :, x_i : self.filter_size[0], y_i : self.filter_size[1], :  # noqa
                 ].reshape(
@@ -67,8 +71,28 @@ class ConvLayer:
                 )  # noqa
                 image_chunk.append(chunk)
         expanded = np.concatenate(image_chunk, axis=0)
-        flattened_input = expanded.reshape(-1, np.sum(self.filter_size))
+        flattened_input = expanded.reshape(
+            -1, self.filter_size[0] * self.filter_size[1]
+        )
         return flattened_input
+
+    def __call__(self, images):
+        self.input = self._get_image_chunks(images)
+
+        self.output = self.input @ self._kernel_weights + self.bias
+        logger.debug(f"Output shape {self.output.shape}")
+        return self.output
+
+    def backprop(self, delta, lr):
+        """Delta is the erro contribution of the nodes at the layer"""
+        delta = delta.reshape(self.input.shape)
+        logger.debug(
+            f"Shapes input.T: {self.input.T.shape}, delta: {delta.shape}"
+        )  # noqa
+        # update weights here
+        self._kernel_weights += self.input.T @ delta * lr
+        # propagate error(delta) backwards
+        return delta @ self._weights.T
 
 
 class Sequential:
