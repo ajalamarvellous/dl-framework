@@ -22,25 +22,25 @@ class Linear:
         """
         # Carefully initialise weight to be as close to zero as possible
         self._weights = np.random.normal(0, 0.1, (input_size, output_size))
-        self.bias = np.random.normal(0, 0.1, 1)
+        self._bias = np.random.normal(0, 0.1, 1)
 
     def __call__(self, input):
-        self.input = input
+        self._input = input
         logger.debug(
-            f"NN input shape: {self.input.shape}, weights: {self._weights.shape}"  # noqa
+            f"NN input shape: {self._input.shape}, weights: {self._weights.shape}"  # noqa
         )
-        self.output = self.input @ self._weights + self.bias
-        logger.debug(f"Output shape {self.output.shape}")
-        return self.output
+        self._output = self.input @ self._weights + self._bias
+        logger.debug(f"Output shape {self._output.shape}")
+        return self._output
 
     def backprop(self, delta, lr):
         """Delta is the erro contribution of the nodes at the layer"""
         delta = delta.reshape(delta.shape[0], -1)
         logger.debug(
-            f"Shapes input.T: {self.input.T.shape}, delta: {delta.shape}"
+            f"Shapes input.T: {self._input.T.shape}, delta: {delta.shape}"
         )  # noqa
         # update weights here
-        self._weights += self.input.T @ delta * lr
+        self._weights += self._input.T @ delta * lr
         # propagate error(delta) backwards
         return delta @ self._weights.T
 
@@ -49,30 +49,29 @@ class ConvLayer:
     def __init__(
         self, filter_size, kernel_size, input_dim, stride=(1, 1), padding=(0, 0)  # noqa
     ):  # noqa
-        self.input_dim = input_dim
-        self.filter_size = filter_size
-        self.kernel_size = kernel_size
+        self._input_dim = input_dim
+        self._filter_size = filter_size
+        self._kernel_size = kernel_size
         self._kernel_weights = Linear(
             self.filter_size[0] * self.filter_size[1], self.kernel_size
         )
-        self.bias = np.random.normal(0, 0.1)
-        self.stride = stride
-        self.padding = padding
+        self._stride = stride
+        self._padding = padding
 
     def _get_image_chunks(self, image):
         dims = image.shape
         image_chunk = []
-        for x_i in range(dims[1] - self.filter_size[0], self.stride[0]):
-            for y_i in range(dims[2] - self.filter_size[1], self.stride[1]):
+        for x_i in range(dims[1] - self._filter_size[0], self._stride[0]):
+            for y_i in range(dims[2] - self._filter_size[1], self._stride[1]):
                 chunk = image[
-                    :, x_i : self.filter_size[0], y_i : self.filter_size[1], :  # noqa
+                    :, x_i : self._filter_size[0], y_i : self._filter_size[1], :  # noqa
                 ].reshape(
-                    -1, dims[-1], self.filter_size[0], self.filter_size[1]
+                    -1, dims[-1], self._filter_size[0], self._filter_size[1]
                 )  # noqa
                 image_chunk.append(chunk)
         expanded = np.concatenate(image_chunk, axis=0)
         flattened_input = expanded.reshape(
-            -1, self.filter_size[0] * self.filter_size[1]
+            -1, self._filter_size[0] * self._filter_size[1]
         )
         return flattened_input
 
@@ -93,27 +92,27 @@ class Sequential:
 
     def __init__(self, layers=None):
         if layers is None:
-            self.layers = []
+            self._layers = []
         else:
-            self.layers = layers
+            self._layers = layers
 
     def __call__(self, node):
         """Add a layer (of n nodes) to the graph"""
         if isinstance(node, list):
-            self.layers.extend(node)
+            self._layers.extend(node)
         else:
-            self.layers.append(node)
+            self._layers.append(node)
 
     def add(self, node):
         """Add a layer (of n nodes) to the graph"""
         if isinstance(node, list):
-            self.layers.extend(node)
+            self._layers.extend(node)
         else:
-            self.layers.append(node)
+            self._layers.append(node)
 
     def predict(self, input):
         """Forward propagation through the network"""
-        for layer in self.layers:
+        for layer in self._layers:
             input = layer(input)
         return input
 
@@ -126,10 +125,10 @@ class Sequential:
                                 chain differentiation (dy/dlx+1 * dlx+1/dx)
         """
         # invert the graph and then propagate the error(delta) backwards
-        self.layers.reverse()
+        self._layers.reverse()
         for layer in self.layers:
             delta = layer.backprop(delta, lr)
-        self.layers.reverse()
+        self._layers.reverse()
 
     def train(
         self,
@@ -177,4 +176,4 @@ class Sequential:
                 f"The train error: {train_error}, test error: {test_error}...."
             )  # noqa
 
-        self.layers = early_stoppage.model
+        self._layers = early_stoppage.model
