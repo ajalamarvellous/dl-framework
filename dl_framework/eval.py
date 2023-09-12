@@ -20,9 +20,9 @@ class RMSE:
                 y_true.shape[0] == y_pred.shape[0]
             ), f"The len of y_true {len(y_true)} does not match the len of y_pred{len(y_pred)}"  # noqa
             n = y_true.shape[0]
-        self.mse_ = (np.array(y_true) - np.array(y_pred)) ** 2
-        self.rmse_ = np.sqrt(np.sum(self.mse_)) / n
-        return self.rmse_
+        self._mse = (np.array(y_true) - np.array(y_pred)) ** 2
+        self._rmse = np.sqrt(np.sum(self._mse)) / n
+        return self._rmse
 
 
 class LogLikelihood:

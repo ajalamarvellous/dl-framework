@@ -8,41 +8,40 @@ from eval import RMSE
 class Dropout:
     def __init__(self, percentage):
         """Randomly set certain percentage to zero"""
-        self.p = percentage
+        self._p = percentage
         pass
 
     def __call__(self, inputs):
-        self.mask = np.random.choice(
-            2, size=inputs.shape, p=[self.p, 1 - self.p]
+        self._mask = np.random.choice(
+            2, size=inputs.shape, p=[self._p, 1 - self.p]
         )  # noqa
-        return inputs * self.mask
+        return inputs * self._mask
 
     def backprop(self, delta, lr):
-        return delta * self.mask
+        return delta * self._mask
 
 
 class EarlyStoppage:
     def __init__(self, patience=10):
-        self.patience = patience
-        self.best_score = None
-        self.count = 0
+        self._patience = patience
+        self._best_score = None
+        self._count = 0
         self.early_stoppage = False
 
     def __call__(self, model, error):
-        self.count += 1
-        if self.best_score is None:
-            self.best_score = abs(error)
-            self.model = copy.deepcopy(model)
-        elif self.count >= self.patience:
+        self._count += 1
+        if self._best_score is None:
+            self._best_score = abs(error)
+        elif self._count >= self.patience:
             print("Stopping training now....")
             self.early_stoppage = True
-        elif abs(error) < self.best_score:
-            self.best_score = abs(error)
+        elif abs(error) < self._best_score:
+            self._best_score = abs(error)
             self.model = copy.deepcopy(model)
-            self.count = 0
+            self._count = 0
         elif abs(error) >= self.best_score:
-            print(f"Error not improving {self.count}/{self.patience}")
-            print(f"Error: {abs(error)}, best error: {self.best_score}")
+            print(f"Error not improving {self._count}/{self._patience}")
+            print(f"Error: {abs(error)}, best error: {self._best_score}")
         else:
             pass
 

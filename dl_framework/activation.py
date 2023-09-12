@@ -9,13 +9,13 @@ class Relu:
 
     def __call__(self, x):
         """Retrun same value if greater than zero"""
-        self.output = (x > 0) * x
-        return self.output
+        self._output = (x > 0) * x
+        return self._output
 
     def backprop(self, delta, lr):
         """lr was added for consistency of interface, it has no use here"""
         lr = 1
-        return (self.output > 0) * delta * lr
+        return (self._output > 0) * delta * lr
 
 
 class Sigmoid:
@@ -23,12 +23,12 @@ class Sigmoid:
         pass
 
     def __call__(self, x):
-        self.output = 1 / (1 + np.exp(-x))
-        return self.output
+        self._output = 1 / (1 + np.exp(-x))
+        return self._output
 
     def backprop(self, delta, lr):
         lr = 1
-        return self.output * (1 - self.output) * delta * lr
+        return self._output * (1 - self._output) * delta * lr
 
 
 class Tanh:
@@ -36,9 +36,9 @@ class Tanh:
         pass
 
     def __call__(self, x):
-        self.output = np.tanh(x)
-        return self.output
+        self._output = np.tanh(x)
+        return self._output
 
     def backprop(self, delta, lr):
         lr = 1
-        return (1 - self.output**2) * lr
+        return (1 - self._output**2) * lr
