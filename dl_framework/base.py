@@ -29,19 +29,23 @@ class Linear:
         logger.debug(
             f"NN input shape: {self._input.shape}, weights: {self._weights.shape}"  # noqa
         )
+        # dot product of the inputs and weight
         self._output = self.input @ self._weights + self._bias
         logger.debug(f"Output shape {self._output.shape}")
         return self._output
 
     def backprop(self, delta, lr):
-        """Delta is the erro contribution of the nodes at the layer"""
+        """Delta is the error contribution of the nodes at the layer"""
+        # reshape the delta (back propagated error) into shape of output
         delta = delta.reshape(delta.shape[0], -1)
         logger.debug(
             f"Shapes input.T: {self._input.T.shape}, delta: {delta.shape}"
         )  # noqa
         # update weights here
         self._weights += self._input.T @ delta * lr
-        # propagate error(delta) backwards
+        # propagate error(delta) backwards by multiplying the delta by
+        # gradient of the layer d/dx(w * x + b) = w, thus
+        # delta * weight = product of all propagated errors till that layer
         return delta @ self._weights.T
 
 
@@ -49,33 +53,53 @@ class ConvLayer:
     def __init__(
         self, filter_size, kernel_size, input_dim, stride=(1, 1), padding=(0, 0)  # noqa
     ):  # noqa
-        self._input_dim = input_dim
-        self._filter_size = filter_size
-        self._kernel_size = kernel_size
+        self._input_dim = input_dim  # no of dimensions of the image (1 or 3)
+        self._filter_size = filter_size  # size of fikler for sliding e.g(3, 3)
+        self._kernel_size = kernel_size  # size of kernel to transform images
+        # kernel weights of the dimension of the filter_size
+        # input_size = flattened filter size
+        # output = desired no of kernel transformation
         self._kernel_weights = Linear(
             self.filter_size[0] * self.filter_size[1], self.kernel_size
         )
+        # size of the movements to make (x, y)
         self._stride = stride
+        # padding to add to the image to keep the image in the same dimensions
+        # TODO: Add oadding
         self._padding = padding
 
     def _get_image_chunks(self, image):
-        dims = image.shape
+        dims = image.shape  # get images dimensions
         image_chunk = []
+        # consider this as sliding over the image by the dimension of th filter
+        # and creating a chunk or fragment of all the unique vies
         for x_i in range(dims[1] - self._filter_size[0], self._stride[0]):
             for y_i in range(dims[2] - self._filter_size[1], self._stride[1]):
+                # images coming in dimension
+                # (no_images, x[height], y[width], z(image dimensions))
                 chunk = image[
-                    :, x_i : self._filter_size[0], y_i : self._filter_size[1], :  # noqa
+                    :,
+                    x_i : x_i + self._filter_size[0],  # noqa
+                    y_i : y_i + self._filter_size[1],  # noqa
+                    :,  # noqa
                 ].reshape(
-                    -1, dims[-1], self._filter_size[0], self._filter_size[1]
+                    # reshape image to (no_images, dims, x, y)
+                    -1,
+                    dims[-1],
+                    self._filter_size[0],
+                    self._filter_size[1],
                 )  # noqa
                 image_chunk.append(chunk)
+        # concatenate into a long row of filter chunks
         expanded = np.concatenate(image_chunk, axis=0)
+        # flatten to have each chunk as a row vector
         flattened_input = expanded.reshape(
             -1, self._filter_size[0] * self._filter_size[1]
         )
         return flattened_input
 
     def __call__(self, images):
+        # forward prop
         return self._kernel(self._get_image_chunks(images))
 
     def backprop(self, delta, lr):
