@@ -100,9 +100,18 @@ class Tanh:
         pass
 
     def __call__(self, x):
+        """Implementation call"""
         self._output = np.tanh(x)
         return self._output
 
     def backprop(self, delta, lr):
+        """
+        Backpropagation Implementation
+        delta : float
+            Gradient propagated to the lyer from layers infront
+        lr : float
+            learning rate (not needed for ReLU backprop, it was only added
+            for consistency of interface)
+        """
         lr = 1
         return (1 - self._output**2) * lr
