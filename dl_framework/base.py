@@ -12,7 +12,39 @@ logger = logging.getLogger()
 
 
 class Linear:
-    """A neural network implementation in numpy"""
+    """
+    A neural network node implementation in numpy
+    y = wx + b
+    where:
+        w = weights
+        x = input data
+        b = bias
+
+    Usage
+    --------
+    from base import Linear
+
+    INPUT_DIM = 10
+    OUTPUT_DIM = 1
+    lr = 0.01  # Learning rate
+
+    model = Linear(INPUT_DIM, OUTPUT_DIM)
+
+    # forward propagation
+    y_pred = model(input)
+
+    # backward propagation
+    error = error_func(y_true, y_pred)
+
+    model.backprop(error, lr)
+
+    it can also be used in Sequential
+
+    model = Sequential([
+        Linear(INPUT_DIM, INPUT_DIM), Linear(INPUT_DIM, OUTPUT_DIM)
+    ])
+    ...
+    """
 
     def __init__(self, input_size: int, output_size: int):
         """
@@ -25,17 +57,58 @@ class Linear:
         self._bias = np.random.normal(0, 0.1, 1)
 
     def __call__(self, input):
+        """
+        Forward call
+
+        Parameter(s)
+        -------------
+        input : np.array(...)
+            data propagating forward
+
+        Return(s)
+        ----------
+        y : np.array(...)
+            y is the dot product of input data and layer weights
+        """
         self._input = input
         logger.debug(
             f"NN input shape: {self._input.shape}, weights: {self._weights.shape}"  # noqa
         )
+        assert (
+            self._input.shape[1] == self._weights.shape[0]
+        ), f"\
+            The dimensions don't match for, input: {self._input.shape[1]} \
+            weights: {self._weights.shape[0]}, \n\
+            expects input of dims ({self._input.shape[1], self._weights.shape[0]})"  # noqa
         # dot product of the inputs and weight
         self._output = self.input @ self._weights + self._bias
         logger.debug(f"Output shape {self._output.shape}")
         return self._output
 
     def backprop(self, delta, lr):
-        """Delta is the error contribution of the nodes at the layer"""
+        """
+        Backpropagation call
+
+        Parameter(s)
+        ------------------
+        delta : np.array(...) | float
+            Delta is the error contribution of the nodes at the layer
+        lr : float
+            learning rate, determining how big the optimisation step should be
+
+        Return(s)
+        -----------
+        delta: np.array(...) | float
+            gradient of the error till that layer
+            d/dx(w * x + b) = w
+            using chain rule to get the error from the last layer
+            delta = delta * weight
+
+        Other(s)
+        -----------
+        layer weights are also updated
+            layer inputs (transpose) * delta (propagated to that layer)
+        """
         # reshape the delta (back propagated error) into shape of output
         delta = delta.reshape(delta.shape[0], -1)
         logger.debug(
@@ -43,9 +116,6 @@ class Linear:
         )  # noqa
         # update weights here
         self._weights += self._input.T @ delta * lr
-        # propagate error(delta) backwards by multiplying the delta by
-        # gradient of the layer d/dx(w * x + b) = w, thus
-        # delta * weight = product of all propagated errors till that layer
         return delta @ self._weights.T
 
 
@@ -110,11 +180,46 @@ class ConvLayer:
 class Sequential:
     """
     A sortof graph tracker to arrange the order for feedforward or Backprop
-    Node(n) -> Node(n+1) -> Node(n+2)...
-    stack in the queue (using python list)
+    Node(n) -> Node(n+1) -> Node(n+2)...stack in the queue (using python list)
+
+    Usage
+    --------
+    from base import Linear, Sequential
+
+    INPUT_DIM = 10
+    OUTPUT_DIM = 1
+    lr = 0.01  # Learning rate
+
+    model = Sequential([
+        Linear(INPUT_DIM, INPUT_DIM), Linear(INPUT_DIM, OUTPUT_DIM)
+    ])
+
+    # forward propagation
+    y_pred = model.predict(input)
+
+    # backward propagation
+    error = error_func(y_true, y_pred)
+
+    model.backprop(error, lr)
+
+    it also has a method that performs complete forward and backprop for a
+    specified number of epochs
+    model.train(
+        x_train,
+        y_train,
+        x_test,
+        y_test,
+        lr,
+        epoch,
+        batch_size,
+        error_func,
+        early_stoppage
+    )
+    ...
     """
 
     def __init__(self, layers=None):
+        """Iniatilising the sequential list"""
         if layers is None:
             self._layers = []
         else:
@@ -135,18 +240,45 @@ class Sequential:
             self._layers.append(node)
 
     def predict(self, input):
-        """Forward propagation through the network"""
+        """
+        Forward propagation through the network
+        calls the model.__call__() method of every layer in it list and
+        propagate the output of the previous layer as input to the next layer
+        """
         for layer in self._layers:
             input = layer(input)
         return input
 
     def backprop(self, delta, lr):
         """
-        Delta is the error difference from the preceeding layer
-        e.g
-        ------
-        delta: Array {x, n} =   y_true - y_hat or
-                                chain differentiation (dy/dlx+1 * dlx+1/dx)
+        Backpropagation of the error through all the layers in the Model by
+        call each layers .backprop() method
+
+        backprop first reverse self.layers (self.layers[start,end, -1]),
+        it then send chains all the layers error together internally using the
+        layers .backprop() such that the delta from that layer is the product
+        of the previous layers gradient multiplied by the gradient of that
+        layer and then update each of those layers.
+
+        Activation functions also recieve the lr majorly because of this method
+        as this method is respondible for getting the gradient of each layer as
+        well as updating them and given that the Linear layers require lr,
+        thus, the activation functions are made to recieve the lr too for api
+        consistency
+
+        Parameter(s)
+        ---------------
+        delta : np.array(...) | float
+            delta is the error contribution to be propagated through the entire
+            network
+        lr : float
+            learning rate, determining how big the optimisation step should be
+
+        Return(s)
+        -----------
+        delta: np.array(...) | float
+            gradient of the error till that layer
+            delta = delta * weight
         """
         # invert the graph and then propagate the error(delta) backwards
         self._layers.reverse()
@@ -166,32 +298,76 @@ class Sequential:
         error_func,
         early_stoppage=None,
     ):
+        """
+        A complete forward and backward propagation of the entire network
+
+        Parameter(s)
+        --------------
+        x_train : np.array(...)
+            training data
+        y_train : np.array(...)
+            training labels
+        x_test : np.array(...)
+            testing data
+        y_test : np.array(...)
+            testing labels
+        lr : float
+            learning rate (how big size of learning update should be)
+        epoch : int
+            number of training epochs
+        batch_size :
+            size of batch to train on for every epoch
+        error_func : Function()
+            Function to calculate the error of the model
+        early_stoppage : Function()
+            Function to stop the model from training again after no successive
+            improvement is observed in the model.
+        """
         for _ in range(epoch):
             y_pred, y_true = [], []
+            # if the batch_size is set to one, it means use the whole Training
+            # data for every batch
             if batch_size == 1:
                 x_train_, y_train_ = x_train, y_train
                 x_test_, y_test_ = x_test, y_test
             else:
+                # randomly select the number of batch specified to train that
+                # epoch
                 choices = np.random.choice(x_train.shape[0], size=batch_size)
                 x_train_, y_train_ = x_train[choices, :], y_train[choices]
                 x_test_, y_test_ = x_test[choices, :], y_test[choices, :]
 
             for X_train, Y_train in zip(x_train_, y_train_):
+                # because the model can propagate many samples together or
+                # just one, however the shape will differ (multiple samples
+                # together will have a (m,n) shape while just one will have
+                # just (n,) shape, so reshape one training sampple to (1,n)
+                # consistency sake
                 if len(X_train.shape) == 1:
                     X_train = np.array([X_train])
+                # forward propagation
                 output = self.predict(X_train)
+                # get the predictions and correct value
                 y_pred.append(output), y_true.append(Y_train)
+                # calculate the difference between each correct and predicted
+                # value, we need this for the Backpropagation, for the model
+                # to account for error contribution to each of the layers
                 error = np.array(Y_train) - output
+                # backpropagate error
                 self.backprop(error, lr)
 
+            # get error summation via error function
             y_pred = np.array(y_pred).flatten()
             y_true = np.array(y_true).flatten()
             train_error = error_func(y_true, y_pred)
 
+            # evaluate model on test set
             y_pred_test = self.predict(x_test_).flatten()
             test_error = error_func(np.array(y_test_), y_pred_test)
 
             print(f"Epoch {_}/ {epoch} done...")
+            # check if model is not improving and stop the model if
+            # early_stoppage is activated
             if early_stoppage is not None:
                 early_stoppage(self.layers, test_error)
                 if early_stoppage.early_stoppage is True:  # noqa
@@ -200,4 +376,5 @@ class Sequential:
                 f"The train error: {train_error}, test error: {test_error}...."
             )  # noqa
 
+        # set the model weights to the best weight saved by ealy stoppage
         self._layers = early_stoppage.model
