@@ -58,6 +58,10 @@ test: ## run tests quickly with the default Python
 test-all: ## run tests on every Python version with tox
 	tox
 
+train:  ## train model using sample data provided
+	python dl_framework/cli.py --x_data="../../Desktop/Mmesoma/272763284_1336955206813947_6728552675586779094_n.jpg"
+	#"x_test.csv" --y_data="y.csv"
+
 coverage: ## check code coverage quickly with the default Python
 	coverage run --source dl_framework setup.py test
 	coverage report -m
