@@ -13,7 +13,7 @@ class Dropout:
 
     def __call__(self, inputs):
         self._mask = np.random.choice(
-            2, size=inputs.shape, p=[self._p, 1 - self.p]
+            2, size=inputs.shape, p=[self._p, 1 - self._p]
         )  # noqa
         return inputs * self._mask
 
@@ -32,14 +32,14 @@ class EarlyStoppage:
         self._count += 1
         if self._best_score is None:
             self._best_score = abs(error)
-        elif self._count >= self.patience:
+        elif self._count >= self._patience:
             print("Stopping training now....")
             self.early_stoppage = True
         elif abs(error) < self._best_score:
             self._best_score = abs(error)
             self.model = copy.deepcopy(model)
             self._count = 0
-        elif abs(error) >= self.best_score:
+        elif abs(error) >= self._best_score:
             print(f"Error not improving {self._count}/{self._patience}")
             print(f"Error: {abs(error)}, best error: {self._best_score}")
         else:
