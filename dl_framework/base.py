@@ -5,7 +5,7 @@ import numpy as np
 
 logging.basicConfig(
     level=logging.DEBUG,
-    filename="../.file.log",
+    # filename="../.file.log",
     format="%(asctime)s %(funcName)s[%(levelname)s]: %(message)s ",
 )
 logger = logging.getLogger()
@@ -81,7 +81,7 @@ class Linear:
             weights: {self._weights.shape[0]}, \n\
             expects input of dims ({self._input.shape[1], self._weights.shape[0]})"  # noqa
         # dot product of the inputs and weight
-        self._output = self.input @ self._weights + self._bias
+        self._output = self._input @ self._weights + self._bias
         logger.debug(f"Output shape {self._output.shape}")
         return self._output
 
@@ -123,14 +123,17 @@ class ConvLayer:
     def __init__(
         self, filter_size, kernel_size, input_dim, stride=(1, 1), padding=(0, 0)  # noqa
     ):  # noqa
-        self._input_dim = input_dim  # no of dimensions of the image (1 or 3)
-        self._filter_size = filter_size  # size of fikler for sliding e.g(3, 3)
-        self._kernel_size = kernel_size  # size of kernel to transform images
+        # no of dimensions of the image (1 or 3)
+        self._input_dim = input_dim
+        # size of fikler for sliding e.g(3, 3)
+        self._filter_size = filter_size
+        # size of kernel to transform images
+        self._kernel_size = kernel_size
         # kernel weights of the dimension of the filter_size
         # input_size = flattened filter size
         # output = desired no of kernel transformation
-        self._kernel_weights = Linear(
-            self.filter_size[0] * self.filter_size[1], self.kernel_size
+        self._kernel = Linear(
+            self._filter_size[0] * self._filter_size[1], self._kernel_size
         )
         # size of the movements to make (x, y)
         self._stride = stride
@@ -140,11 +143,17 @@ class ConvLayer:
 
     def _get_image_chunks(self, image):
         dims = image.shape  # get images dimensions
+        logger.debug(f"Image shape {dims}")
+        if len(dims) == 3:
+            image = np.array([image])
+            self._get_image_chunks(image)
         image_chunk = []
         # consider this as sliding over the image by the dimension of th filter
         # and creating a chunk or fragment of all the unique vies
-        for x_i in range(dims[1] - self._filter_size[0], self._stride[0]):
-            for y_i in range(dims[2] - self._filter_size[1], self._stride[1]):
+        for x_i in range(0, dims[1] - self._filter_size[0], self._stride[0]):
+            for y_i in range(
+                0, dims[2] - self._filter_size[1], self._stride[1]
+            ):  # noqa
                 # images coming in dimension
                 # (no_images, x[height], y[width], z(image dimensions))
                 chunk = image[
@@ -152,25 +161,33 @@ class ConvLayer:
                     x_i : x_i + self._filter_size[0],  # noqa
                     y_i : y_i + self._filter_size[1],  # noqa
                     :,  # noqa
-                ].reshape(
-                    # reshape image to (no_images, dims, x, y)
-                    -1,
-                    dims[-1],
-                    self._filter_size[0],
-                    self._filter_size[1],
-                )  # noqa
+                ]
+                # ].reshape(
+                #     # reshape image to (no_images, dims, x, y)
+                #     -1,
+                #     dims[-1],
+                #     self._filter_size[0],
+                #     self._filter_size[1],
+                # )  # noqa
                 image_chunk.append(chunk)
+        logger.info(
+            f"Image chunk shape: {len(image_chunk)}, {image_chunk[0].shape}"
+        )  # noqa
         # concatenate into a long row of filter chunks
-        expanded = np.concatenate(image_chunk, axis=0)
+        expanded = np.array(image_chunk)
+        # expanded = np.concatenate(image_chunk, axis=0)
+        logger.info(f"Expanded images dims: {expanded.shape}")
         # flatten to have each chunk as a row vector
         flattened_input = expanded.reshape(
             -1, self._filter_size[0] * self._filter_size[1]
         )
+        logger.info(f"Flattened image shape: {flattened_input.shape}")
         return flattened_input
 
     def __call__(self, images):
         # forward prop
-        return self._kernel(self._get_image_chunks(images))
+        images_chunk = self._get_image_chunks(images)
+        return self._kernel(images_chunk)
 
     def backprop(self, delta, lr):
         """Delta is the erro contribution of the nodes at the layer"""
@@ -282,7 +299,7 @@ class Sequential:
         """
         # invert the graph and then propagate the error(delta) backwards
         self._layers.reverse()
-        for layer in self.layers:
+        for layer in self._layers:
             delta = layer.backprop(delta, lr)
         self._layers.reverse()
 
@@ -369,7 +386,7 @@ class Sequential:
             # check if model is not improving and stop the model if
             # early_stoppage is activated
             if early_stoppage is not None:
-                early_stoppage(self.layers, test_error)
+                early_stoppage(self._layers, test_error)
                 if early_stoppage.early_stoppage is True:  # noqa
                     break
             print(
