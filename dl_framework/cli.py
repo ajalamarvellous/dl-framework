@@ -1,8 +1,9 @@
 """Console script for dl_framework."""
 import click
+import cv2
 import numpy as np
 from activation import Relu
-from base import Linear, Sequential
+from base import ConvLayer, Linear, Sequential
 from eval import RMSE
 from optimizers import Dropout, EarlyStoppage
 
@@ -47,12 +48,23 @@ def main(x_data, y_data):
     )
     click.echo("See click documentation at https://click.palletsprojects.com/")
 
-    x_train, y_train, x_test, y_test = prepare_data(x_data, y_data, 0.75)
-    print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
+    # x_train, y_train, x_test, y_test = prepare_data(x_data, y_data, 0.75)
+    x_train = x_test = np.array([cv2.imread(x_data)])
+    y_train = y_test = np.array([[1]])
+    # print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
 
     np.random.seed(1)
     # , Dropout(0.3)
-    model = Sequential([Linear(5, 10), Relu(), Dropout(0.3), Linear(10, 1)])
+    # model = Sequential([Linear(5, 10), Relu(), Dropout(0.3), Linear(10, 1)])
+    model = Sequential(
+        [
+            ConvLayer(filter_size=(3, 3), kernel_size=16, input_dim=3),
+            Linear(16, 10),
+            Relu(),
+            Dropout(0.3),
+            Linear(10, 1),
+        ]
+    )
     # Models can be initiated using  any of the following too
     # This
     # model = Sequential()
@@ -63,7 +75,7 @@ def main(x_data, y_data):
 
     rmse = RMSE()
     lr = 0.0001
-    epoch = 3000
+    epoch = 300
     batch_size = 1
     early_stoppage = EarlyStoppage(patience=30)
     print("Models parameters successfully set...")
